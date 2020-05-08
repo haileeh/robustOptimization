@@ -1,20 +1,32 @@
-clear all
-% Time Span
+function solveLQR(sys)
+% clear all
+% % Time Span
 tf = 100;
 h = 0.01; % step size
 n = tf/h;
 tspan = linspace(0,tf,n);
 
+% n = sys.tf/sys.h;
+% h = sys.h;
+% tspan = sys.tspan;
+
 xddot = zeros(n,1); yddot = zeros(n,1); thetaddot = zeros(n,1);
 xdot = zeros(n,1); ydot = zeros(n,1); thetadot = zeros(n,1);
 x = zeros(n,1); y = zeros(n,1); theta = zeros(n,1);
 ux = zeros(n,1); uy=zeros(n,1); utheta = zeros(n,1);
-x(1) = 1;
-y(1) = -1.3;
+x(1) = sys.IC(1);%1;
+xdot(1) = sys.IC(2);
+y(1) = sys.IC(3);%-1.3;
+ydot(1) = sys.IC(4);
+
 theta(1) = pi/2;
 thetadot(1) = pi/8;
-mx = 10; bx=2; cx = 1;
-my = 7; by = 1; cy = 0.6;
+% mx = 10; bx=2; cx = 1;
+% my = 7; by = 1; cy = 0.6;
+
+mx = sys.mx; bx = sys.bx; cx = sys.cx;
+my = sys.my; by = sys.by; cy = sys.cy;
+
 I = 0.8;
 % [xdot ] = [0 1    ][x   ] + [0]
 % [xddot]   [c/m b/m][xdot] + [1]u
@@ -31,11 +43,11 @@ Qy = [1 0; 0 100];
 Ry = 0.1;
 Ky = dlqr(Ay,By,Qy,Ry,[]);
 
-Atheta = [0 1; 0 0];
-Btheta = [0 1/I]';
-Qtheta = [100 0; 0 1];
-Rtheta = 10;
-Ktheta = dlqr(Atheta,Btheta,Qtheta,Rtheta,[]);
+% Atheta = [0 1; 0 0];
+% Btheta = [0 1/I]';
+% Qtheta = [100 0; 0 1];
+% Rtheta = 10;
+% Ktheta = dlqr(Atheta,Btheta,Qtheta,Rtheta,[]);
 
 % Desired state
 xdes = 0;

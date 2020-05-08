@@ -1,22 +1,34 @@
+function adaptiveSlidingMode(sys)
 % adaptive sliding mode
-clear all
-% Time Span
-tf = 100;
-h = 0.01; % step size
-n = tf/h;
-tspan = linspace(0,tf,n);
+
+% % Time Span
+% tf = 100;
+% h = 0.01; % step size
+% n = tf/h;
+% tspan = linspace(0,tf,n);
+
+n = sys.tf/sys.h;
+h = sys.h;
+tspan = sys.tspan;
 
 xddot = zeros(n,1); yddot = zeros(n,1); thetaddot = zeros(n,1);
 xdot = zeros(n,1); ydot = zeros(n,1); thetadot = zeros(n,1);
 x = zeros(n,1); y = zeros(n,1); theta = zeros(n,1);
 ux = zeros(n,1); uy=zeros(n,1); utheta = zeros(n,1);
-x(1) = 1;
-y(1) = -1.3;
+x(1) = sys.IC(1);%1;
+xdot(1) = sys.IC(2);
+y(1) = sys.IC(3);%-1.3;
+ydot(1) = sys.IC(4);
 theta(1) = pi/2;
 thetadot(1) = pi/8;
-mx = 10; bx=2; cx = 1;
-my = 7; by = 1; cy = 0.6;
-I = 0.8;
+% mx = 10; bx=2; cx = 1;
+% my = 7; by = 1; cy = 0.6;
+
+%using uncertain parameters
+mx = sys.mx_unc; bx = sys.bx_unc; cx = sys.cx_unc;
+my = sys.my_unc; by = sys.by_unc; cy = sys.cy_unc;
+
+% I = 0.8;
 
 % new vectors
 sx = zeros(n,1);

@@ -1,0 +1,86 @@
+function robust_sdp()
+
+import mosek.fusion.*;
+% import mosek.jar.*
+N = 10;
+n_u = 1;
+n_w = 2;
+n_x = 2;
+
+constraint_matrix = constraints();
+dim = size(constraint_matrix,1);
+
+% SDP
+mod = Model('SDO_horizon');
+% constraint
+psdMat = mod.variable('psdMat', Domain.inPSDCone(dim));
+% decision variables
+lambda = mod.variable('lambda', Domain.greaterThan(0.)); 
+z = mod.variable('z'); 
+
+% PSD Constraint
+% (1,1) = (1:10,1:10)
+for i=1:N*n_u
+    for j=1:N*n_u
+        psd_i = psdMat.index([i-1,j-1]);
+        mod.constraint(psd_i, Domain.equalsTo(constraint_matrix(i,j)));
+    end
+end
+
+% (1,2)
+
+% (1,3) = (1:10,12:31)
+for i = 1:N*n_u
+    for j = N*n_u+2 : N*n_u+1 + N*n_w
+        psd_i = psdMat.index([i-1,j-1]);
+        mod.constraint(psd_i, Domain.equalsTo(constraint_matrix(i, j)) );  
+    end
+end
+
+% (2,1)
+
+% (2,2)
+i = N*n_u + 1;
+j = N*n_u + 1;
+psd_i = psdMat.index([i-1,j-1]);
+constraint = Expr.sub(z, Expr.mul(gamma^2, lambda));
+                  % index being set         actual expression you want
+mod.constraint(Expr.sub( psd_i, constraint), Domain.equalsTo( 0.0 )); 
+
+
+% (2,3)
+i = N*n_u + 1;
+for j = N*n_u + 2 : N*n_u+1 + N*n_w
+    psd_i = psdMat.index([i-1,j-1]);
+    mod.constraint( psd_i, Domain.equalsTo(constraint_matrix(i, j)) ); 
+end
+
+% (3,1)
+for i = N*n_u+2 : N*n_u+1 + N*n_w
+    for j = 1:N*n_u
+        psd_i = psdMat.index([i,j]);
+        M.constraint( psd_i, Domain.equalsTo(constraint_matrix(i, j)) );  % set [i,j] of the PSD var
+    end
+end
+
+% block_32
+for i = N*n_u + 2 : N*n_u+1 + N*n_w
+    j = N*n_u + 1;
+    psd_i = PSD_mat.index([i,j]);
+    M.constraint( psd_i, Domain.equalsTo(constraint_matrix(i, j)) );  % set [i,j] of the PSD var
+end
+
+% block_33
+for i = N*n_u + 2 : N*n_u+1 + N*n_w
+    for j = N*n_u + 2 : N*n_u+1 + N*n_w
+        psd_i = PSD_mat.index([i,j]);
+        if i==j
+            constraint = Expr.add(lambda, constraint_matrix(i, j));
+            M.constraint(Expr.sub( psd_i, constraint), Domain.equalsTo( 0.0 ));  % set [i,j] of the PSD var
+        else
+            M.constraint( psd_i, Domain.equalsTo(constraint_matrix(i, j)) );  % set [i,j] of the PSD var
+        end
+    end
+end
+
+keyboard
