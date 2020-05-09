@@ -1,4 +1,4 @@
-function cost_function = solveLQR(sys)
+function solveLQR(sys)
 % solve LQR for different conditions
 
 % % Time Span
@@ -288,8 +288,7 @@ Qy = [1 0; 0 100];
 Ry = 0.1;
 Ky = dlqr(Ay,By,Qy,Ry,[]);
 
-Q = [1 0 0 0; 0 100 0 0; 0 0 1 0; 0 0 0 100];
-R = [0.1 0; 0 0.1];
+Q = [1 0 0 0; 0 100 0 0; 0 0 1 0; 0 0 0 10
 
 i = 1;
 while (i<n) 
@@ -320,8 +319,6 @@ y_r = y(1:i);
 xdot_r = xdot(1:i);
 ydot_r = ydot(1:i);
 t = tspan(1:i);
-ux_r = ux(1:i);
-uy_r = uy(1:i);
 
 % figure; 
 % subplot(2,1,1)
@@ -359,10 +356,4 @@ axis tight
 cost_function = 0;
 for j=1:length(x_r)
     xVec = [x_r(j); xdot_r(j); y_r(j); ydot_r(j)];
-    xTerm = xVec'*Q*xVec;
-    uVec = [ux_r(j); uy_r(j)];
-    uTerm = uVec'*R*uVec;
-    cost_function = cost_function + xTerm + uTerm;
 end
-
-cost_function

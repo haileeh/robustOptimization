@@ -1,22 +1,35 @@
+function adaptiveSlidingMode(sys)
 % adaptive sliding mode
-clear all
-% Time Span
+
+% % Time Span
 tf = 100;
 h = 0.01; % step size
 n = tf/h;
 tspan = linspace(0,tf,n);
 
+% n = sys.tf/sys.h;
+% h = sys.h;
+% tspan = sys.tspan;
+
 xddot = zeros(n,1); yddot = zeros(n,1); thetaddot = zeros(n,1);
 xdot = zeros(n,1); ydot = zeros(n,1); thetadot = zeros(n,1);
 x = zeros(n,1); y = zeros(n,1); theta = zeros(n,1);
 ux = zeros(n,1); uy=zeros(n,1); utheta = zeros(n,1);
-x(1) = 1;
-y(1) = -1.3;
+x(1) = sys.IC(1);%1;
+xdot(1) = sys.IC(2);
+y(1) = sys.IC(3);%-1.3;
+ydot(1) = sys.IC(4);
 theta(1) = pi/2;
 thetadot(1) = pi/8;
 mx = 10; bx=2; cx = 1;
 my = 7; by = 1; cy = 0.6;
-I = 0.8;
+
+%using uncertain parameters: dont need them here: maybe to initialize
+%ahat?? no it made it worse
+% mx = sys.mx_unc; bx = sys.bx_unc; cx = sys.cx_unc;
+% my = sys.my_unc; by = sys.by_unc; cy = sys.cy_unc;
+
+% I = 0.8;
 
 % new vectors
 sx = zeros(n,1);
@@ -45,6 +58,12 @@ x_error = x(1)-xdes;
 x_error_dot = xdot(1)-xdesdot;
 y_error = y(1)-ydes;
 y_error_dot = ydot(1)-ydesdot;
+
+rng(17);
+%w = wgn(n,1,0.01);
+w_mag = 0.005;
+w = w_normrnd(0,1);
+v = wgn(n,1,0.01);
 
 i=1;
 while ( i<n ) 
@@ -78,18 +97,22 @@ while ( i<n )
     uy(i) = uy_hat - uy_p;
 
     % Update dynamics
-    xddot(i) = (1/mx)*ux(i) - (bx/mx)*xdot(i) - (cx/mx)*x(i);
+    xddot(i) = (1/mx)*ux(i) - (bx/mx)*xdot(i-1) - (cx/mx)*x(i-1);% -w(i);
+%     xddot(i) = awgn(xddot(i),20);
     xdot(i) = xdot(i-1) + xddot(i)*h; 
     x(i) = x(i-1) + xdot(i)*h; 
-    yddot(i) = (1/my)*uy(i) - (by/my)*ydot(i) - (cy/my)*y(i);
+    yddot(i) = (1/my)*uy(i) - (by/my)*ydot(i-1) - (cy/my)*y(i-1);%-v(i);
+%     yddot(i) = awgn(yddot(i),20);
     ydot(i) = ydot(i-1) + yddot(i)*h;
     y(i) = y(i-1) + ydot(i)*h;
 
     % Update errors
     x_error = x(i)-xdes;
     x_error_dot = xdot(i)-xdesdot;
+    y_error = y(i)-ydes;
+    y_error_dot = ydot(i)-ydesdot;
 
-    if (abs(x_error)<1e-3 && abs(x_error_dot)<1e-3)
+    if (abs(x_error)<1e-3 && abs(x_error_dot)<1e-3 && abs(y_error)<1e-3 && abs(y_error_dot)<1e-3)
         break
     end
 end
@@ -105,6 +128,7 @@ ux = ux(1:i);
 uy = uy(1:i);
 utheta = utheta(1:i);
 sx = sx(1:i);
+sy = sy(1:i);
 
 figure; 
 subplot(2,1,1)
@@ -126,8 +150,9 @@ ylabel('Velocity');
 title('Y-Position and Y-Velocity');
 
 figure; 
-plot(t,ux);
+plot(t,ux,t,uy);
 hold on; grid on;
+legend('u_x','u_y');
 xlabel('Time [s]');
 ylabel('u');
 title('Control Effort');
@@ -135,6 +160,8 @@ title('Control Effort');
 figure;
 plot(t,sx);
 hold on; grid on;
+plot(t,sy);
+legend('s_x','s_y');
 xlabel('Time [s]');
 ylabel('s');
 title('Sliding Variable');

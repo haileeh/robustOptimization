@@ -1,4 +1,4 @@
-function u = robust_sdp(sys,N)
+function u = adaptive_robust_sdp(sys,N)
 
 import mosek.fusion.*;
 % import mosek.jar.*
@@ -18,9 +18,23 @@ dim = size(constraint_matrix,1);
 mod = Model('SDO_horizon');
 % constraint
 psdMat = mod.variable('psdMat', Domain.inPSDCone(dim));
+s = mod.variable('s', Domain.inRange(-5., 5.)); % might want to change this
 % decision variables
 lambda = mod.variable('lambda', Domain.greaterThan(0.)); 
 z = mod.variable('z'); 
+
+% define s constraint
+worst_w = 0.005*ones(16,1);
+old_u = [-0.01; 0.01]; %WHAT TO ACTUALLY MAKE THIS
+old_u = [old_u; old_u; old_u; old_u];
+temp = Atilde(:,:,end)*sys.IC+Btilde(:,:,end)*old_u+Ctilde(:,:,end)*worst_w;
+sfactor = 0.2;
+% conS = temp(2)-sfactor*temp(1);
+% conS = Expr.sub(temp(2), Expr.mul(lambda,temp(1)));
+mod.constraint(s,Domain.equalsTo(conS));
+% mod.constraint(Expr.sub(s, conS), Domain.inRange(-50.0,50.0)); % can try and make this tighter
+
+
 
 % PSD Constraint
 % (1,1) = (1:8,1:8)

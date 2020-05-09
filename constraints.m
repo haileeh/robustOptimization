@@ -1,4 +1,4 @@
-function [constraint_matrix,B,b] = constraints(gamma,n,sys)
+function [constraint_matrix,B,b,Atilde,Btilde,Ctilde] = constraints(gamma,n,sys)
 
 % Form the large constraint matrix
 n_u = 2;

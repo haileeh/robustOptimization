@@ -1,7 +1,7 @@
 %% Set up true parameters
 % Time Span
-tf = 10;
-sys.h = 0.1; % step size
+tf = 15;%10;
+sys.h = 0.05;%0.1; % step size
 n = tf/sys.h;
 tspan = linspace(0,tf,n);
 sys.tf = tf;
@@ -35,6 +35,8 @@ cy_unc = normrnd(cy,cy/10);
 sys.mx_unc = mx_unc; sys.bx_unc = bx_unc; sys.cx_unc = cx_unc;
 sys.my_unc = my_unc; sys.by_unc = by_unc; sys.cy_unc = cy_unc;
 
+sys.w_mag = 0.005;
+
 % I = 0.8;
 
 % [xdot ] = [0 1 0 0][x   ] + [0]
@@ -55,30 +57,117 @@ sys.Cx_unc = eye(4);
 
 rng(17);
 %% LQR
-solveLQR(sys)
-keyboard
+% cost_function = solveLQR(sys)
 
 %% Adaptive Sliding Mode
-adaptiveSlidingMode(sys)
-keyboard
+% cost_function = adaptiveSlidingMode(sys)
+
 %% SDP
 N = 4;
 c=1;
+tol = 1e-2;
+
 for j=0:sys.h:tf
    u = robust_sdp(sys,N);
    xk(:,c+1) = propagate_dynamics(sys,u(1:2),xk(:,c));
    sys.IC = xk(:,c+1);
    c=c+1;
+   if (abs(xk(1,c))<tol && abs(xk(3,c))<tol)
+       break
+   end
+end
+
+% Plotting
+if c < length(tspan)
+    t=tspan(1:c);
+    xk = xk(:,1:c);
+else
+    t = tspan;
+    xk = xk(:,2:end-1);
+end
+comp_xk = xk;
+comp_t = t;
+
+%% Adaptive SDP
+N=4;
+c=1;
+uprev=zeros(8,1);
+xk = zeros(4,n);
+sys.IC = [x0; xdot0;y0;ydot0];
+xk(:,1) = [x0,xdot0,y0,ydot0];
+for j=0:sys.h:tf
+   u = adaptive_robust_sdp(sys,N,c-1,uprev);
+   xk(:,c+1) = propagate_dynamics(sys,u(1:2),xk(:,c));
+   sys.IC = xk(:,c+1);
+   c=c+1;
+   uprev = [u(1:2);u(1:2);u(1:2);u(1:2)];
+   if (abs(xk(1,c))<tol && abs(xk(3,c))<tol)
+       break
+   end
+end
+
+if c <= length(tspan)
+    t=tspan(1:c);
+    xk = xk(:,1:c);
+else
+    t = tspan;
+    xk = xk(:,2:end-1);
 end
 
 %% Plotting
-figure; 
-plot(tspan,xk(1,2:end-1));
+figure;
+plot(comp_t,comp_xk(1,:),'-*');
 hold on; grid on;
-plot(tspan,xk(3,2:end-1));
-plot(tspan,zeros(length(tspan),1),'k');
+plot(comp_t,comp_xk(3,:),'-.','LineWidth',2);
+plot(comp_t,zeros(length(comp_t),1),'k');
 title('SDP: Time vs. Distance');
 xlabel('Time [s]');
 ylabel('Distance');
 legend('x','y');
+axis tight
 
+figure; 
+plot(t,xk(1,:),'-*');
+hold on; grid on;
+plot(t,xk(3,:),'-.','LineWidth',2);
+plot(t,zeros(length(t),1),'k');
+title('A-SDP: Time vs. Distance');
+xlabel('Time [s]');
+ylabel('Distance');
+legend('x','y');
+axis tight
+
+n1 = length(comp_xk);
+n2 = length(xk);
+if n1>n2
+    len = n2;
+else
+    len = n1;
+end
+
+figure; 
+plot(tspan(1:len),xk(1,1:len)-comp_xk(1,1:len),'-*');
+hold on; grid on;
+plot(tspan(1:len),xk(3,1:len)-comp_xk(3,1:len),'-.','LineWidth',2);
+plot(t,zeros(length(t),1),'k');
+title('Difference in Positions');
+legend('X','Y');
+xlabel('Time [s]');
+ylabel('A-SDP - SDP: Distance Difference');
+axis tight
+
+
+%% difference in x position
+tol = 1e-2;
+for j=1:length(xk)
+    if abs(xk(1,j)) < tol && abs(xk(3,j)) < tol
+    end
+end
+j
+
+for j=1:length(comp_xk)
+    if abs(comp_xk(1,j)) < tol && abs(comp_xk(3,j)) < tol
+        break
+    end
+end
+j

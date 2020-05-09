@@ -1,32 +1,33 @@
-function adaptiveSlidingMode(sys)
+function cost_function = adaptiveSlidingMode(sys)
 % adaptive sliding mode
 
 % % Time Span
-% tf = 100;
-% h = 0.01; % step size
-% n = tf/h;
-% tspan = linspace(0,tf,n);
+tf = 100;
+h = 0.01; % step size
+n = tf/h;
+tspan = linspace(0,tf,n);
 
-n = sys.tf/sys.h;
-h = sys.h;
-tspan = sys.tspan;
+% n = sys.tf/sys.h;
+% h = sys.h;
+% tspan = sys.tspan;
 
 xddot = zeros(n,1); yddot = zeros(n,1); thetaddot = zeros(n,1);
 xdot = zeros(n,1); ydot = zeros(n,1); thetadot = zeros(n,1);
 x = zeros(n,1); y = zeros(n,1); theta = zeros(n,1);
 ux = zeros(n,1); uy=zeros(n,1); utheta = zeros(n,1);
-x(1) = sys.IC(1);%1;
+x(1) = sys.IC(1);
 xdot(1) = sys.IC(2);
-y(1) = sys.IC(3);%-1.3;
+y(1) = sys.IC(3);
 ydot(1) = sys.IC(4);
 theta(1) = pi/2;
 thetadot(1) = pi/8;
-% mx = 10; bx=2; cx = 1;
-% my = 7; by = 1; cy = 0.6;
+mx = 10; bx=2; cx = 1;
+my = 7; by = 1; cy = 0.6;
 
-%using uncertain parameters
-mx = sys.mx_unc; bx = sys.bx_unc; cx = sys.cx_unc;
-my = sys.my_unc; by = sys.by_unc; cy = sys.cy_unc;
+%using uncertain parameters: dont need them here: maybe to initialize
+%ahat?? no it made it worse
+% mx = sys.mx_unc; bx = sys.bx_unc; cx = sys.cx_unc;
+% my = sys.my_unc; by = sys.by_unc; cy = sys.cy_unc;
 
 % I = 0.8;
 
@@ -58,9 +59,10 @@ x_error_dot = xdot(1)-xdesdot;
 y_error = y(1)-ydes;
 y_error_dot = ydot(1)-ydesdot;
 
-rng(15);
-w = wgn(n,1,0.01);
-v = wgn(n,1,0.01);
+rng(17);
+
+% uncertainty
+w_mag = sys.w_mag;
 
 i=1;
 while ( i<n ) 
@@ -94,12 +96,10 @@ while ( i<n )
     uy(i) = uy_hat - uy_p;
 
     % Update dynamics
-    xddot(i) = (1/mx)*ux(i) - (bx/mx)*xdot(i) - (cx/mx)*x(i);% -w(i);
-    xddot(i) = awgn(xddot(i),20);
+    xddot(i) = (1/mx)*ux(i) - (bx/mx)*xdot(i-1) - (cx/mx)*x(i-1) - w_mag*normrnd(0,1);
     xdot(i) = xdot(i-1) + xddot(i)*h; 
     x(i) = x(i-1) + xdot(i)*h; 
-    yddot(i) = (1/my)*uy(i) - (by/my)*ydot(i) - (cy/my)*y(i);%-v(i);
-    yddot(i) = awgn(yddot(i),20);
+    yddot(i) = (1/my)*uy(i) - (by/my)*ydot(i-1) - (cy/my)*y(i-1) - w_mag*normrnd(0,1);
     ydot(i) = ydot(i-1) + yddot(i)*h;
     y(i) = y(i-1) + ydot(i)*h;
 
@@ -127,38 +127,70 @@ utheta = utheta(1:i);
 sx = sx(1:i);
 sy = sy(1:i);
 
-figure; 
-subplot(2,1,1)
-plot(t,x_nn); 
+% figure; 
+% subplot(2,1,1)
+% plot(t,x_nn); 
+% hold on; grid on;
+% ylabel('Distance');
+% yyaxis right
+% plot(t,xdot_nn);
+% xlabel('Time [s]');
+% ylabel('Velocity');
+% title('X-Position and X-Velocity');
+% subplot(2,1,2)
+% plot(t,y_nn); grid on;
+% ylabel('Distance');
+% yyaxis right
+% plot(t,ydot_nn);
+% xlabel('Time [s]');
+% ylabel('Velocity');
+% title('Y-Position and Y-Velocity');
+
+mid = 20;
+
+figure;
+plot(t(1:mid:end),x_nn(1:mid:end),'-*');
 hold on; grid on;
-ylabel('Distance');
-yyaxis right
-plot(t,xdot_nn);
+plot(t(1:mid:end),y_nn(1:mid:end),'-.','LineWidth',2);
+plot(t,zeros(length(t),1),'k');
+title('ASM: Time vs. Distance');
 xlabel('Time [s]');
-ylabel('Velocity');
-title('X-Position and X-Velocity');
-subplot(2,1,2)
-plot(t,y_nn); grid on;
 ylabel('Distance');
-yyaxis right
-plot(t,ydot_nn);
-xlabel('Time [s]');
-ylabel('Velocity');
-title('Y-Position and Y-Velocity');
+legend('x','y');
+axis tight
 
 figure; 
-plot(t,ux,t,uy);
+plot(t(1:mid:end),ux(1:mid:end),'-*');
 hold on; grid on;
+plot(t(1:mid:end),uy(1:mid:end),'-.','LineWidth',2);
+plot(t,zeros(length(t),1),'k');
 legend('u_x','u_y');
 xlabel('Time [s]');
 ylabel('u');
 title('Control Effort');
+axis tight
 
 figure;
-plot(t,sx);
+plot(t(1:mid:end),sx(1:mid:end),'-*');
 hold on; grid on;
-plot(t,sy);
+plot(t(1:mid:end),sy(1:mid:end),'-.','LineWidth',2);
+plot(t,zeros(length(t),1),'k');
 legend('s_x','s_y');
 xlabel('Time [s]');
 ylabel('s');
 title('Sliding Variable');
+axis tight
+
+% wasn't formulated with LQR so makes sense the cost function would be high
+Q = [1 0 0 0; 0 100 0 0; 0 0 1 0; 0 0 0 100];
+R = [0.1 0; 0 0.1];
+
+% solve for cost_function
+cost_function = 0;
+for j=1:length(x_nn)
+    xVec = [x_nn(j); xdot_nn(j); y_nn(j); ydot_nn(j)];
+    xTerm = xVec'*Q*xVec;
+    uVec = [ux(j); uy(j)];
+    uTerm = uVec'*R*uVec;
+    cost_function = cost_function + xTerm + uTerm;
+end
