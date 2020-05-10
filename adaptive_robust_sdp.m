@@ -1,7 +1,6 @@
 function u = adaptive_robust_sdp(sys,N,iter,input_u)
 
 import mosek.fusion.*;
-% import mosek.jar.*
 
 n_u = 2;
 n_w = 4;
@@ -10,7 +9,7 @@ n_x = 4;
 %sys.Ax = sys.Ax + eye(size(sys.Ax,2));
 sys.Ax_unc = sys.Ax_unc + eye(size(sys.Ax_unc,2));
 
-gamma = 10; % user selected
+gamma = sys.gamma;%10; % user selected: can't solve 0.001 or 0.01 or 0.1
 [constraint_matrix,B,b,Atilde,Btilde,Ctilde] = constraints(gamma,N,sys);
 dim = size(constraint_matrix,1);
 
@@ -26,9 +25,9 @@ lambda = mod.variable('lambda', Domain.greaterThan(0.));
 z = mod.variable('z'); 
 
 % define s constraint
-worst_w = 0.005*ones(16,1); %equal to gamma? or some relationship to gamma
+worst_w = sys.w_mag*ones(16,1); %equal to gamma? or some relationship to gamma
 if iter==0
-    old_u = [0.1; -0.07]; %WHAT TO ACTUALLY MAKE THIS
+    old_u = [0.1; -0.07]; % this is my guess
     old_u = [old_u; old_u; old_u; old_u];
 else
     old_u = input_u;
@@ -121,7 +120,7 @@ mod.solve();
 
 PSD_answer = psdMat.level();
 
-y = PSD_answer(dim*N*n_u+1 : dim*N*n_u + N*n_u);  % is this the correct slice?
+y = PSD_answer(dim*N*n_u+1 : dim*N*n_u + N*n_u);
 
 % convert to u
-u = B^(-1/2)*y - inv(B)*b;
+u = B^(-1/2)*y - B\b;

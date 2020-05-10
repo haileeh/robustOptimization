@@ -1,0 +1,192 @@
+LQR Data for Iter #1 with w_mag=0.0050
+Time: 15.000000 [sec] 
+Cost function: 1569.136037 
+
+ASM Data for Iter #1 with w_mag=0.0050
+Time: 12.058039 [sec] 
+Cost function: 16486.612592 
+
+SDP Data for Iter #1 with w_mag=0.0050
+Time: 14.297659 [sec] 
+Cost function: 158.752860 
+
+A-SDP Data for Iter #1 with w_mag=0.0050
+Time: 15.000000 [sec] 
+Cost function: 151.426175 
+
+LQR Data for Iter #2 with w_mag=0.0500
+Time: 13.595318 [sec] 
+Cost function: 1550.575071 
+
+ASM Data for Iter #2 with w_mag=0.0500
+Time: 12.668446 [sec] 
+Cost function: 16587.395430 
+
+SDP Data for Iter #2 with w_mag=0.0500
+Time: 15.000000 [sec] 
+Cost function: 399.248388 
+
+A-SDP Data for Iter #2 with w_mag=0.0500
+Time: 15.000000 [sec] 
+Cost function: 625.828895 
+
+LQR Data for Iter #3 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 2384.392959 
+
+ASM Data for Iter #3 with w_mag=0.5000
+Time: 13.739159 [sec] 
+Cost function: 17942.258703 
+
+SDP Data for Iter #3 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 29055.677550 
+
+A-SDP Data for Iter #3 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 50277.985046 
+
+LQR Data for Iter #4 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 5227.046608 
+
+ASM Data for Iter #4 with w_mag=1.0000
+Time: 13.759173 [sec] 
+Cost function: 20122.363111 
+
+SDP Data for Iter #4 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 114686.752311 
+
+A-SDP Data for Iter #4 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 202694.109486 
+
+LQR Data for Iter #5 with w_mag=0.0050
+Time: 4.966555 [sec] 
+Cost function: 1326.983551 
+
+ASM Data for Iter #5 with w_mag=0.0050
+Time: 12.058039 [sec] 
+Cost function: 16486.612592 
+
+SDP Data for Iter #5 with w_mag=0.0050
+Time: 14.297659 [sec] 
+Cost function: 158.752860 
+
+A-SDP Data for Iter #5 with w_mag=0.0050
+Time: 15.000000 [sec] 
+Cost function: 151.426175 
+
+LQR Data for Iter #6 with w_mag=0.0500
+Time: 5.016722 [sec] 
+Cost function: 1318.501676 
+
+ASM Data for Iter #6 with w_mag=0.0500
+Time: 12.668446 [sec] 
+Cost function: 16587.395430 
+
+SDP Data for Iter #6 with w_mag=0.0500
+Time: 15.000000 [sec] 
+Cost function: 399.248388 
+
+A-SDP Data for Iter #6 with w_mag=0.0500
+Time: 15.000000 [sec] 
+Cost function: 625.828895 
+
+LQR Data for Iter #7 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 2444.889855 
+
+ASM Data for Iter #7 with w_mag=0.5000
+Time: 13.739159 [sec] 
+Cost function: 17942.258703 
+
+SDP Data for Iter #7 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 29055.677550 
+
+A-SDP Data for Iter #7 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 50277.985046 
+
+LQR Data for Iter #8 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 5291.952152 
+
+ASM Data for Iter #8 with w_mag=1.0000
+Time: 13.759173 [sec] 
+Cost function: 20122.363111 
+
+SDP Data for Iter #8 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 114686.752311 
+
+A-SDP Data for Iter #8 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 202694.109486 
+
+LQR Data for Iter #9 with w_mag=0.0050
+Time: 13.093645 [sec] 
+Cost function: 1630.008471 
+
+ASM Data for Iter #9 with w_mag=0.0050
+Time: 12.058039 [sec] 
+Cost function: 16486.612592 
+
+SDP Data for Iter #9 with w_mag=0.0050
+Time: 14.297659 [sec] 
+Cost function: 158.752860 
+
+A-SDP Data for Iter #9 with w_mag=0.0050
+Time: 15.000000 [sec] 
+Cost function: 151.426175 
+
+LQR Data for Iter #10 with w_mag=0.0500
+Time: 5.016722 [sec] 
+Cost function: 1304.775529 
+
+ASM Data for Iter #10 with w_mag=0.0500
+Time: 12.668446 [sec] 
+Cost function: 16587.395430 
+
+SDP Data for Iter #10 with w_mag=0.0500
+Time: 15.000000 [sec] 
+Cost function: 399.248388 
+
+A-SDP Data for Iter #10 with w_mag=0.0500
+Time: 15.000000 [sec] 
+Cost function: 625.828895 
+
+LQR Data for Iter #11 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 2433.525937 
+
+ASM Data for Iter #11 with w_mag=0.5000
+Time: 13.739159 [sec] 
+Cost function: 17942.258703 
+
+SDP Data for Iter #11 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 29055.677550 
+
+A-SDP Data for Iter #11 with w_mag=0.5000
+Time: 15.000000 [sec] 
+Cost function: 50277.985046 
+
+LQR Data for Iter #12 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 5281.086199 
+
+ASM Data for Iter #12 with w_mag=1.0000
+Time: 13.759173 [sec] 
+Cost function: 20122.363111 
+
+SDP Data for Iter #12 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 114686.752311 
+
+A-SDP Data for Iter #12 with w_mag=1.0000
+Time: 15.000000 [sec] 
+Cost function: 202694.109486 
+

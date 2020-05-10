@@ -1,7 +1,6 @@
 function u = robust_sdp(sys,N)
 
 import mosek.fusion.*;
-% import mosek.jar.*
 
 n_u = 2;
 n_w = 4;
@@ -10,8 +9,8 @@ n_x = 4;
 %sys.Ax = sys.Ax + eye(size(sys.Ax,2));
 sys.Ax_unc = sys.Ax_unc + eye(size(sys.Ax_unc,2));
 
-gamma = 10; % user selected
-[constraint_matrix,B,b,Atilde,Btilde,Ctilde] = constraints(gamma,N,sys);
+gamma = sys.gamma;%0.001; % user selected
+[constraint_matrix,B,b,~,~,~] = constraints(gamma,N,sys);
 dim = size(constraint_matrix,1);
 
 % SDP
@@ -93,7 +92,7 @@ mod.solve();
 
 PSD_answer = psdMat.level();
 
-y = PSD_answer(dim*N*n_u+1 : dim*N*n_u + N*n_u);  % is this the correct slice?
+y = PSD_answer(dim*N*n_u+1 : dim*N*n_u + N*n_u);
 
 % convert to u
-u = B^(-1/2)*y - inv(B)*b;
+u = B^(-1/2)*y - B\b;

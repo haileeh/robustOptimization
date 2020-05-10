@@ -1,8 +1,8 @@
-function cost_function = adaptiveSlidingMode(sys)
+function adaptiveSlidingMode(sys,iter)
 % adaptive sliding mode
 
 % % Time Span
-tf = 100;
+tf = sys.tf;%100;
 h = 0.01; % step size
 n = tf/h;
 tspan = linspace(0,tf,n);
@@ -11,16 +11,15 @@ tspan = linspace(0,tf,n);
 % h = sys.h;
 % tspan = sys.tspan;
 
-xddot = zeros(n,1); yddot = zeros(n,1); thetaddot = zeros(n,1);
-xdot = zeros(n,1); ydot = zeros(n,1); thetadot = zeros(n,1);
-x = zeros(n,1); y = zeros(n,1); theta = zeros(n,1);
-ux = zeros(n,1); uy=zeros(n,1); utheta = zeros(n,1);
+xddot = zeros(n,1); yddot = zeros(n,1);
+xdot = zeros(n,1); ydot = zeros(n,1);
+x = zeros(n,1); y = zeros(n,1);
+ux = zeros(n,1); uy=zeros(n,1);
 x(1) = sys.IC(1);
 xdot(1) = sys.IC(2);
 y(1) = sys.IC(3);
 ydot(1) = sys.IC(4);
-theta(1) = pi/2;
-thetadot(1) = pi/8;
+
 mx = 10; bx=2; cx = 1;
 my = 7; by = 1; cy = 0.6;
 
@@ -28,8 +27,6 @@ my = 7; by = 1; cy = 0.6;
 %ahat?? no it made it worse
 % mx = sys.mx_unc; bx = sys.bx_unc; cx = sys.cx_unc;
 % my = sys.my_unc; by = sys.by_unc; cy = sys.cy_unc;
-
-% I = 0.8;
 
 % new vectors
 sx = zeros(n,1);
@@ -58,6 +55,8 @@ x_error = x(1)-xdes;
 x_error_dot = xdot(1)-xdesdot;
 y_error = y(1)-ydes;
 y_error_dot = ydot(1)-ydesdot;
+
+tol = sys.tol; 
 
 rng(17);
 
@@ -109,42 +108,23 @@ while ( i<n )
     y_error = y(i)-ydes;
     y_error_dot = ydot(i)-ydesdot;
 
-    if (abs(x_error)<1e-3 && abs(x_error_dot)<1e-3 && abs(y_error)<1e-3 && abs(y_error_dot)<1e-3)
+    if (abs(x_error)<tol && abs(y_error)<tol)
         break
     end
 end
 
 x_nn = x(1:i);
 y_nn = y(1:i);
-theta_nn = theta(1:i);
+
 xdot_nn = xdot(1:i);
 ydot_nn = ydot(1:i);
-thetadot_nn = thetadot(1:i);
+
 t = tspan(1:i);
 ux = ux(1:i);
 uy = uy(1:i);
-utheta = utheta(1:i);
+
 sx = sx(1:i);
 sy = sy(1:i);
-
-% figure; 
-% subplot(2,1,1)
-% plot(t,x_nn); 
-% hold on; grid on;
-% ylabel('Distance');
-% yyaxis right
-% plot(t,xdot_nn);
-% xlabel('Time [s]');
-% ylabel('Velocity');
-% title('X-Position and X-Velocity');
-% subplot(2,1,2)
-% plot(t,y_nn); grid on;
-% ylabel('Distance');
-% yyaxis right
-% plot(t,ydot_nn);
-% xlabel('Time [s]');
-% ylabel('Velocity');
-% title('Y-Position and Y-Velocity');
 
 mid = 20;
 
@@ -159,33 +139,50 @@ ylabel('Distance');
 legend('x','y');
 axis tight
 
-figure; 
-plot(t(1:mid:end),ux(1:mid:end),'-*');
-hold on; grid on;
-plot(t(1:mid:end),uy(1:mid:end),'-.','LineWidth',2);
-plot(t,zeros(length(t),1),'k');
-legend('u_x','u_y');
-xlabel('Time [s]');
-ylabel('u');
-title('Control Effort');
-axis tight
+baseFileName = sprintf('ASM#%d.png', iter);
+fullFileName = fullfile('Plots', baseFileName);
+saveas(gcf, fullFileName);
+close(gcf)
 
-figure;
-plot(t(1:mid:end),sx(1:mid:end),'-*');
-hold on; grid on;
-plot(t(1:mid:end),sy(1:mid:end),'-.','LineWidth',2);
-plot(t,zeros(length(t),1),'k');
-legend('s_x','s_y');
-xlabel('Time [s]');
-ylabel('s');
-title('Sliding Variable');
-axis tight
+if 0
+    figure;
+    plot(t(1:mid:end),ux(1:mid:end),'-*');
+    hold on; grid on;
+    plot(t(1:mid:end),uy(1:mid:end),'-.','LineWidth',2);
+    plot(t,zeros(length(t),1),'k');
+    legend('u_x','u_y');
+    xlabel('Time [s]');
+    ylabel('u');
+    title('Control Effort');
+    axis tight
+    
+    baseFileName = sprintf('ASM_ctrl#%d.png', iter);
+    fullFileName = fullfile('Plots', baseFileName);
+    saveas(gcf, fullFileName);
+    close(gcf)
+    
+    figure;
+    plot(t(1:mid:end),sx(1:mid:end),'-*');
+    hold on; grid on;
+    plot(t(1:mid:end),sy(1:mid:end),'-.','LineWidth',2);
+    plot(t,zeros(length(t),1),'k');
+    legend('s_x','s_y');
+    xlabel('Time [s]');
+    ylabel('s');
+    title('Sliding Variable');
+    axis tight
+    
+    baseFileName = sprintf('ASM_sliding#%d.png', iter);
+    fullFileName = fullfile('Plots', baseFileName);
+    saveas(gcf, fullFileName);
+    close(gcf)
+end
 
 % wasn't formulated with LQR so makes sense the cost function would be high
 Q = [1 0 0 0; 0 100 0 0; 0 0 1 0; 0 0 0 100];
 R = [0.1 0; 0 0.1];
 
-% solve for cost_function
+%% solve for cost_function
 cost_function = 0;
 for j=1:length(x_nn)
     xVec = [x_nn(j); xdot_nn(j); y_nn(j); ydot_nn(j)];
@@ -194,3 +191,10 @@ for j=1:length(x_nn)
     uTerm = uVec'*R*uVec;
     cost_function = cost_function + xTerm + uTerm;
 end
+
+%% save cost_function and time of completion to file
+fid = fopen('data.txt','a');
+fprintf(fid,'ASM Data for Iter #%d with w_mag=%0.4f\n', iter,sys.w_mag);
+fprintf(fid,'Time: %f [sec] \n', t(end));
+fprintf(fid,'Cost function: %f \n\n',cost_function);
+fclose(fid);
