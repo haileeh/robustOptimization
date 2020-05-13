@@ -1,7 +1,7 @@
 %% Set up true parameters
 % Time Span
-tf = 15;%10;
-sys.h = 0.05;%0.1; % step size
+tf = 15;
+sys.h = 0.05;% step size
 n = tf/sys.h;
 tspan = linspace(0,tf,n);
 sys.tf = tf;
@@ -22,45 +22,25 @@ sys.my = my; sys.by = by; sys.cy = cy;
 
 rng(17);
 
-%uncertain system parameters
-varArray = [10; 25; 50];
-% mx_unc = normrnd(mx,mx/10);
-% bx_unc = normrnd(bx,bx/10);
-% cx_unc = normrnd(cx,cx/10);
-% my_unc = normrnd(my,my/10);
-% by_unc = normrnd(by,by/10);
-% cy_unc = normrnd(cy,cy/10);
-%
-% sys.mx_unc = mx_unc; sys.bx_unc = bx_unc; sys.cx_unc = cx_unc;
-% sys.my_unc = my_unc; sys.by_unc = by_unc; sys.cy_unc = cy_unc;
+%uncertain system parameters ratio array
+varArray = [5; 10; 25; 50];
 
 sys.tol = 1e-2;
 
-% sys.w_mag = 0.005;
+% w_mag ratio array
 wArray = [0.005; 0.05; 0.5; 1];
-sys.gamma = 10; % 1 or 10 only for adaptive; sdp can do full range
+sys.gamma = 10;
 
-% I = 0.8;
-
-% [xdot ] = [0 1 0 0][x   ] + [0]
-% [xddot]   [c/m b/m 0 0][xdot] + [1/m]u
-% [ydot ] = [0 0 0 1][y   ] + [0]
-% [yddot] = [0 0 c/m b/m][ydot] + [1/m]u
-
-% y = B xvec
-sys.Ax = [0 1 0 0; cx/mx, bx/mx 0 0; 0 0 0 1;0 0 cy/my, by/my];
-sys.Bx = [0 0; 1/mx 0; 0 0; 0 1/my];%[0 1/mx 0 1/my]';
+sys.Ax = [0 1 0 0; -cx/mx, -bx/mx 0 0; 0 0 0 1;0 0 -cy/my, -by/my];
+sys.Bx = [0 0; 1/mx 0; 0 0; 0 1/my];
 sys.Cx = eye(4);
 sys.Qx = eye(4);
 sys.Rx = 0.1;
 
-sys.Ax_unc = [0 1 0 0; cx_unc/mx_unc, bx_unc/mx_unc 0 0; 0 0 0 1; 0 0 cy_unc/my_unc, by_unc/my_unc];
-sys.Bx_unc = [0 0;1/mx_unc 0; 0 0;0 1/my_unc];%[0 1/mx_unc 0 1/my_unc]';
-sys.Cx_unc = eye(4);
-
-% for loop should go here, vary iter, gamma, w_mag
-iter = 1;
-for varIter =1:3
+% for loop should go here, vary iter w_mag
+fix_tf = 1;
+iter = 1; 
+for varIter =1:4
     varDen = varArray(varIter);
     mx_unc = normrnd(mx,mx/varDen);
     bx_unc = normrnd(bx,bx/varDen);
@@ -71,6 +51,11 @@ for varIter =1:3
     
     sys.mx_unc = mx_unc; sys.bx_unc = bx_unc; sys.cx_unc = cx_unc;
     sys.my_unc = my_unc; sys.by_unc = by_unc; sys.cy_unc = cy_unc;
+    
+    sys.Ax_unc = [0 1 0 0; -cx_unc/mx_unc, -bx_unc/mx_unc 0 0; 0 0 0 1; 0 0 -cy_unc/my_unc, -by_unc/my_unc];
+    sys.Bx_unc = [0 0;1/mx_unc 0; 0 0;0 1/my_unc];
+    sys.Cx_unc = eye(4);
+    
     for counter=1:4
         sys.w_mag = wArray(counter);
         sys.IC = [x0; xdot0;y0;ydot0];
@@ -78,10 +63,10 @@ for varIter =1:3
         xk(:,1) = [x0,xdot0,y0,ydot0];
         
         %% LQR
-        solveLQR(sys,iter)
+        solveLQR(sys,iter,fix_tf)
         
         %% Adaptive Sliding Mode
-        adaptiveSlidingMode(sys,iter)
+        adaptiveSlidingMode(sys,iter,fix_tf)
         
         %% SDP
         N = 4;
@@ -94,8 +79,10 @@ for varIter =1:3
             sys.IC = xk(:,c+1);
             uspan(:,c) = u;
             c=c+1;
-            if (abs(xk(1,c))<tol && abs(xk(3,c))<tol)
-                break
+            if ~fix_tf
+                if (abs(xk(1,c))<tol && abs(xk(3,c))<tol)
+                    break
+                end
             end
         end
         
@@ -126,8 +113,10 @@ for varIter =1:3
             u_asdp(:,c) = u;
             c=c+1;
             uprev = [u(1:2);u(1:2);u(1:2);u(1:2)];
-            if (abs(xk(1,c))<tol && abs(xk(3,c))<tol)
-                break
+            if ~fix_tf
+                if (abs(xk(1,c))<tol && abs(xk(3,c))<tol)
+                    break
+                end
             end
         end
         
@@ -140,7 +129,7 @@ for varIter =1:3
             xk = xk(:,2:end-1);
         end
         
-        %% Plotting
+        %% Plotting for SDP and ASDP
         figure;
         plot(comp_t,comp_xk(1,:),'-*');
         hold on; grid on;
@@ -173,27 +162,7 @@ for varIter =1:3
         saveas(gcf, fullFileName);
         close(gcf)
         
-        n1 = length(comp_xk);
-        n2 = length(xk);
-        if n1>n2
-            len = n2;
-        else
-            len = n1;
-        end
-        
-        figure;
-        plot(tspan(1:len),xk(1,1:len)-comp_xk(1,1:len),'-*');
-        hold on; grid on;
-        plot(tspan(1:len),xk(3,1:len)-comp_xk(3,1:len),'-.','LineWidth',2);
-        plot(tspan(1:len),zeros(length(tspan(1:len)),1),'k');
-        title('Difference in Positions');
-        legend('X','Y');
-        xlabel('Time [s]');
-        ylabel('A-SDP - SDP: Distance Difference');
-        axis tight
-        
         %% solve for cost_function for SDP
-%         Q = [1 0 0 0; 0 100 0 0; 0 0 1 0; 0 0 0 100];
         Q = [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1];
         R = [0.1 0; 0 0.1];
         
@@ -220,11 +189,11 @@ for varIter =1:3
         fid = fopen('data.txt','a');
         fprintf(fid,'SDP Data for Iter #%d with w_mag=%0.4f\n', iter,sys.w_mag);
         fprintf(fid,'Time: %f [sec] \n', comp_t(end));
-        fprintf(fid,'Cost function: %f \n\n',sum(cost_function_sdp));%cost_function_sdp(1));
+        fprintf(fid,'Cost function: %f \n\n',sum(cost_function_sdp));
         
         fprintf(fid,'A-SDP Data for Iter #%d with w_mag=%0.4f\n', iter,sys.w_mag);
         fprintf(fid,'Time: %f [sec] \n', t(end));
-        fprintf(fid,'Cost function: %f \n\n',sum(cost_function_asdp));%cost_function_asdp(1));
+        fprintf(fid,'Cost function: %f \n\n',sum(cost_function_asdp));
         fclose(fid);
         
         iter = iter+1;

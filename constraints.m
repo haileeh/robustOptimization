@@ -3,8 +3,8 @@ function [constraint_matrix,B,b,Atilde,Btilde,Ctilde] = constraints(gamma,n,sys)
 % Form the large constraint matrix
 n_u = 2;
 
-Ax = sys.Ax_unc;%sys.Ax;
-Bx = sys.Bx_unc;%sys.Bx;
+Ax = sys.Ax_unc;
+Bx = sys.Bx_unc;
 Cx = sys.Cx;
 Qx = sys.Qx;
 Rx = sys.Rx;
@@ -46,7 +46,7 @@ for j=1:n
 end
 
 c = CA*sys.IC;
-%Rhat = Rx*eye(n*n_u);
+
 Rhat = zeros(n*n_u);
 for k = 1:n
     Rhat((k-1)*n_u +1:(k)*n_u, (k-1)*n_u +1:(k)*n_u) = Rx;
@@ -56,9 +56,9 @@ b = BA*sys.IC;
 
 h = c-D'*inv(B)*b;
 F = B^(-1/2)*D;
-yvec = ones(n*n_u,1); % this should actually be a decision variable
-z = 5; % this is a decision variable
-lambda = 0; % this is a decision variable
+yvec = ones(n*n_u,1); % decision variable
+z = 5; %decision variable
+lambda = 0; %decision variable
 constraint_matrix = ...   % this is [25,25] right now
     [eye(n*n_u), yvec, F;...   %[4,21] 
      yvec', z-gamma^2*lambda, -h';...   %[1, 21]

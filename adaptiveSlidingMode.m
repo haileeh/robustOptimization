@@ -1,4 +1,4 @@
-function adaptiveSlidingMode(sys,iter)
+function adaptiveSlidingMode(sys,iter,fix_tf)
 % adaptive sliding mode
 
 % % Time Span
@@ -95,12 +95,19 @@ while ( i<n )
     uy(i) = uy_hat - uy_p;
 
     % Update dynamics
-    xddot(i) = (1/mx)*ux(i) - (bx/mx)*xdot(i-1) - (cx/mx)*x(i-1) - w_mag*normrnd(0,1);
-    xdot(i) = xdot(i-1) + xddot(i)*h; 
-    x(i) = x(i-1) + xdot(i)*h; 
-    yddot(i) = (1/my)*uy(i) - (by/my)*ydot(i-1) - (cy/my)*y(i-1) - w_mag*normrnd(0,1);
-    ydot(i) = ydot(i-1) + yddot(i)*h;
-    y(i) = y(i-1) + ydot(i)*h;
+    u = [ux(i); uy(i)];
+    xk = [x(i-1);xdot(i-1);y(i-1);ydot(i-1)];
+    [xkp1] = propagate_dynamics(sys,u,xk);
+    x(i) = xkp1(1);
+    xdot(i) = xkp1(2);
+    y(i) = xkp1(3);
+    ydot(i) = xkp1(4);
+%     xddot(i) = (1/mx)*ux(i) - (bx/mx)*xdot(i-1) - (cx/mx)*x(i-1) - w_mag*normrnd(0,1);
+%     xdot(i) = xdot(i-1) + xddot(i)*h; 
+%     x(i) = x(i-1) + xdot(i)*h; 
+%     yddot(i) = (1/my)*uy(i) - (by/my)*ydot(i-1) - (cy/my)*y(i-1) - w_mag*normrnd(0,1);
+%     ydot(i) = ydot(i-1) + yddot(i)*h;
+%     y(i) = y(i-1) + ydot(i)*h;
 
     % Update errors
     x_error = x(i)-xdes;
@@ -108,8 +115,10 @@ while ( i<n )
     y_error = y(i)-ydes;
     y_error_dot = ydot(i)-ydesdot;
 
-    if (abs(x_error)<tol && abs(y_error)<tol)
-        break
+    if ~fix_tf
+        if (abs(x_error)<tol && abs(y_error)<tol)
+            break
+        end
     end
 end
 
@@ -179,7 +188,7 @@ if 0
 end
 
 % wasn't formulated with LQR so makes sense the cost function would be high
-Q = [1 0 0 0; 0 100 0 0; 0 0 1 0; 0 0 0 100];
+Q = [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1];
 R = [0.1 0; 0 0.1];
 
 %% solve for cost_function

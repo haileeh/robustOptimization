@@ -9,7 +9,7 @@ n_x = 4;
 %sys.Ax = sys.Ax + eye(size(sys.Ax,2));
 sys.Ax_unc = sys.Ax_unc + eye(size(sys.Ax_unc,2));
 
-gamma = sys.gamma;%0.001; % user selected
+gamma = sys.gamma;
 [constraint_matrix,B,b,~,~,~] = constraints(gamma,N,sys);
 dim = size(constraint_matrix,1);
 
@@ -47,7 +47,6 @@ i = N*n_u + 1;
 j = N*n_u + 1;
 psd_i = psdMat.index([i-1,j-1]);
 constraint = Expr.sub(z, Expr.mul(gamma^2, lambda));
-                  % index being set         actual expression you want
 mod.constraint(Expr.sub( psd_i, constraint), Domain.equalsTo( 0.0 )); 
 
 

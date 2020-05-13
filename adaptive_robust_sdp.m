@@ -17,8 +17,8 @@ dim = size(constraint_matrix,1);
 mod = Model('SDO_horizon');
 % constraint
 psdMat = mod.variable('psdMat', Domain.inPSDCone(dim));
-% sx = mod.variable('sx', Domain.inRange(-3., 3.)); % might want to change this
-% sy = mod.variable('sy', Domain.inRange(-5.,5.));
+sx = mod.variable('sx', Domain.inRange(-10.,3.)); % might want to change this
+sy = mod.variable('sy', Domain.inRange(-10.,3.));
 
 % decision variables
 lambda = mod.variable('lambda', Domain.greaterThan(0.)); 
@@ -27,7 +27,7 @@ z = mod.variable('z');
 % define s constraint
 worst_w = sys.w_mag*ones(16,1); %equal to gamma? or some relationship to gamma
 if iter==0
-    old_u = [0.1; -0.07]; % this is my guess
+    old_u = [1; -0.7];%[0.1; -0.07]; % this is my guess
     old_u = [old_u; old_u; old_u; old_u];
 else
     old_u = input_u;
@@ -35,14 +35,8 @@ end
 temp = Atilde(:,:,end)*sys.IC+Btilde(:,:,end)*old_u+Ctilde(:,:,end)*worst_w;
 sfactor = 0.5;
 % conSx = temp(2)-sfactor*temp(1);
-conSx = Expr.sub(temp(2), Expr.mul(lambda,temp(1)));
-% mod.constraint(sx,Domain.equalsTo(conSx));
-
-% mod.constraint(Expr.sub(s, conS), Domain.inRange(-50.0,50.0)); % can try and make this tighter
-% conSy = temp(4)-sfactor*temp(3);
-conSy = Expr.sub(temp(4), Expr.mul(lambda,temp(3)));
-% mod.constraint(sy,Domain.equalsTo(conSy));
-
+conSx = Expr.sub(temp(2), Expr.mul(0.1,Expr.mul(lambda,temp(1))));
+conSy = Expr.sub(temp(4), Expr.mul(0.1,Expr.mul(lambda,temp(3))));
 
 
 % PSD Constraint
@@ -70,9 +64,6 @@ end
 i = N*n_u + 1;
 j = N*n_u + 1;
 psd_i = psdMat.index([i-1,j-1]);
-% constraint = Expr.sub(z, Expr.mul(gamma^2, lambda));
-%                   % index being set         actual expression you want
-% mod.constraint(Expr.sub( psd_i, constraint), Domain.equalsTo( 0.0 )); 
 constraint = Expr.sub(z, Expr.mul(gamma^2, lambda));
 constraint = Expr.sub(constraint, conSx);
 constraint = Expr.sub(constraint, conSy);
