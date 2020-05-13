@@ -1,7 +1,8 @@
+% This is the main script to execute the four methods
 %% Set up true parameters
 % Time Span
 tf = 15;
-sys.h = 0.05;% step size
+sys.h = 0.05; % step size
 n = tf/sys.h;
 tspan = linspace(0,tf,n);
 sys.tf = tf;
@@ -37,7 +38,7 @@ sys.Cx = eye(4);
 sys.Qx = eye(4);
 sys.Rx = 0.1;
 
-% for loop should go here, vary iter w_mag
+%% For loops
 fix_tf = 1;
 iter = 1; 
 for varIter =1:4

@@ -1,17 +1,11 @@
 function adaptiveSlidingMode(sys,iter,fix_tf)
-% adaptive sliding mode
-
+% Adaptive sliding mode control for uncertainty encapsulated in sys struct
 % % Time Span
-tf = sys.tf;%100;
-h = 0.01; % step size
+tf = sys.tf;
+h = sys.h; % step size
 n = tf/h;
 tspan = linspace(0,tf,n);
 
-% n = sys.tf/sys.h;
-% h = sys.h;
-% tspan = sys.tspan;
-
-xddot = zeros(n,1); yddot = zeros(n,1);
 xdot = zeros(n,1); ydot = zeros(n,1);
 x = zeros(n,1); y = zeros(n,1);
 ux = zeros(n,1); uy=zeros(n,1);
@@ -19,14 +13,6 @@ x(1) = sys.IC(1);
 xdot(1) = sys.IC(2);
 y(1) = sys.IC(3);
 ydot(1) = sys.IC(4);
-
-mx = 10; bx=2; cx = 1;
-my = 7; by = 1; cy = 0.6;
-
-%using uncertain parameters: dont need them here: maybe to initialize
-%ahat?? no it made it worse
-% mx = sys.mx_unc; bx = sys.bx_unc; cx = sys.cx_unc;
-% my = sys.my_unc; by = sys.by_unc; cy = sys.cy_unc;
 
 % new vectors
 sx = zeros(n,1);
@@ -60,9 +46,7 @@ tol = sys.tol;
 
 rng(17);
 
-% uncertainty
-w_mag = sys.w_mag;
-
+%% While loop
 i=1;
 while ( i<n ) 
     i=i+1;
@@ -102,12 +86,6 @@ while ( i<n )
     xdot(i) = xkp1(2);
     y(i) = xkp1(3);
     ydot(i) = xkp1(4);
-%     xddot(i) = (1/mx)*ux(i) - (bx/mx)*xdot(i-1) - (cx/mx)*x(i-1) - w_mag*normrnd(0,1);
-%     xdot(i) = xdot(i-1) + xddot(i)*h; 
-%     x(i) = x(i-1) + xdot(i)*h; 
-%     yddot(i) = (1/my)*uy(i) - (by/my)*ydot(i-1) - (cy/my)*y(i-1) - w_mag*normrnd(0,1);
-%     ydot(i) = ydot(i-1) + yddot(i)*h;
-%     y(i) = y(i-1) + ydot(i)*h;
 
     % Update errors
     x_error = x(i)-xdes;
@@ -132,10 +110,8 @@ t = tspan(1:i);
 ux = ux(1:i);
 uy = uy(1:i);
 
-sx = sx(1:i);
-sy = sy(1:i);
-
-mid = 20;
+%% Plotting
+mid = 5;
 
 figure;
 plot(t(1:mid:end),x_nn(1:mid:end),'-*');
@@ -153,45 +129,9 @@ fullFileName = fullfile('Plots', baseFileName);
 saveas(gcf, fullFileName);
 close(gcf)
 
-if 0
-    figure;
-    plot(t(1:mid:end),ux(1:mid:end),'-*');
-    hold on; grid on;
-    plot(t(1:mid:end),uy(1:mid:end),'-.','LineWidth',2);
-    plot(t,zeros(length(t),1),'k');
-    legend('u_x','u_y');
-    xlabel('Time [s]');
-    ylabel('u');
-    title('Control Effort');
-    axis tight
-    
-    baseFileName = sprintf('ASM_ctrl#%d.png', iter);
-    fullFileName = fullfile('Plots', baseFileName);
-    saveas(gcf, fullFileName);
-    close(gcf)
-    
-    figure;
-    plot(t(1:mid:end),sx(1:mid:end),'-*');
-    hold on; grid on;
-    plot(t(1:mid:end),sy(1:mid:end),'-.','LineWidth',2);
-    plot(t,zeros(length(t),1),'k');
-    legend('s_x','s_y');
-    xlabel('Time [s]');
-    ylabel('s');
-    title('Sliding Variable');
-    axis tight
-    
-    baseFileName = sprintf('ASM_sliding#%d.png', iter);
-    fullFileName = fullfile('Plots', baseFileName);
-    saveas(gcf, fullFileName);
-    close(gcf)
-end
-
-% wasn't formulated with LQR so makes sense the cost function would be high
+%% solve for cost_function
 Q = [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1];
 R = [0.1 0; 0 0.1];
-
-%% solve for cost_function
 cost_function = 0;
 for j=1:length(x_nn)
     xVec = [x_nn(j); xdot_nn(j); y_nn(j); ydot_nn(j)];
